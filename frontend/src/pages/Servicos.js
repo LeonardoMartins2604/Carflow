@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getServicos, createServico, updateServico, deleteServico } from "@/services/api";
 import { Plus, Pencil, Trash2, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,7 @@ const Servicos = () => {
     duracao: "",
   });
 
-  useEffect(() => {
-    loadServicos();
-  }, []);
-
-  const loadServicos = async () => {
+  const loadServicos = useCallback(async () => {
     try {
       const data = await getServicos();
       setServicos(data);
@@ -37,7 +33,11 @@ const Servicos = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadServicos();
+  }, [loadServicos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

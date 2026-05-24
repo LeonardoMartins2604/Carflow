@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getDashboardStats, getAgendamentos } from "@/services/api";
 import { Package, Wrench, Calendar, Clock } from "lucide-react";
 
@@ -13,11 +13,7 @@ const Dashboard = () => {
   const [recentAgendamentos, setRecentAgendamentos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       const statsData = await getDashboardStats();
       setStats(statsData);
@@ -33,7 +29,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const StatCard = ({ title, value, icon: Icon, color }) => (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-slate-600 transition-all">

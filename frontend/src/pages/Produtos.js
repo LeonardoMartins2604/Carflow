@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getProdutos, createProduto, updateProduto, deleteProduto } from "@/services/api";
 import { Plus, Pencil, Trash2, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Helper: retorna a classe CSS do badge de estoque
+const getEstoqueBadgeClass = (estoque) => {
+  if (estoque > 10) return "bg-green-500/20 text-green-300";
+  if (estoque > 0) return "bg-yellow-500/20 text-yellow-300";
+  return "bg-red-500/20 text-red-300";
+};
+
 const Produtos = () => {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,11 +31,7 @@ const Produtos = () => {
     estoque: "",
   });
 
-  useEffect(() => {
-    loadProdutos();
-  }, []);
-
-  const loadProdutos = async () => {
+  const loadProdutos = useCallback(async () => {
     try {
       const data = await getProdutos();
       setProdutos(data);
@@ -37,7 +40,11 @@ const Produtos = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadProdutos();
+  }, [loadProdutos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -259,13 +266,7 @@ const Produtos = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          produto.estoque > 10
-                            ? "bg-green-500/20 text-green-300"
-                            : produto.estoque > 0
-                            ? "bg-yellow-500/20 text-yellow-300"
-                            : "bg-red-500/20 text-red-300"
-                        }`}
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getEstoqueBadgeClass(produto.estoque)}`}
                       >
                         {produto.estoque}
                       </span>

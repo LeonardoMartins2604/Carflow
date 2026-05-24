@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getAgendamentos,
   createAgendamento,
@@ -41,11 +41,7 @@ const Agendamentos = () => {
     status: "pendente",
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [agendamentosData, servicosData] = await Promise.all([
         getAgendamentos(),
@@ -58,7 +54,11 @@ const Agendamentos = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

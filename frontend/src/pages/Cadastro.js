@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { createAgendamento, getServicos } from "@/services/api";
 import { Button } from "@/components/ui/button";
@@ -27,18 +27,18 @@ const Cadastro = () => {
     observacoes: "",
   });
 
-  useEffect(() => {
-    loadServicos();
-  }, []);
-
-  const loadServicos = async () => {
+  const loadServicos = useCallback(async () => {
     try {
       const data = await getServicos();
       setServicos(data);
     } catch (error) {
       console.error("Erro ao carregar serviços:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadServicos();
+  }, [loadServicos]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
