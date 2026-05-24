@@ -7,11 +7,11 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 
-HOST = os.environ.get('HOST', '0.0.0.0')
-PORT = int(os.environ.get('PORT', 3000))
+HOST: str = os.environ.get('HOST', '0.0.0.0')
+PORT: int = int(os.environ.get('PORT', 3000))
 
 
-REDIRECT_HTML = """<!DOCTYPE html>
+REDIRECT_HTML: str = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -102,26 +102,26 @@ REDIRECT_HTML = """<!DOCTYPE html>
 class CarFlowHandler(BaseHTTPRequestHandler):
     """Handler simples que sempre retorna a página de redirect"""
 
-    def _send_headers(self):
+    def _send_headers(self) -> None:
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         self.end_headers()
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         self._send_headers()
         self.wfile.write(REDIRECT_HTML.encode('utf-8'))
 
-    def do_HEAD(self):
+    def do_HEAD(self) -> None:
         self._send_headers()
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args) -> None:
         """Log no formato simples"""
         print(f"[CarFlow Frontend] {self.address_string()} - {format % args}")
 
 
-def main():
-    server = HTTPServer((HOST, PORT), CarFlowHandler)
+def main() -> None:
+    server: HTTPServer = HTTPServer((HOST, PORT), CarFlowHandler)
     print(f"🐍 CarFlow Frontend (Python) rodando em http://{HOST}:{PORT}")
     print("   Redireciona todas as requisições para /api/ (Django)")
     try:
