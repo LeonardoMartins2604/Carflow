@@ -1,120 +1,80 @@
-{% extends 'base.html' %}
-
-{% block title %}Dashboard - CarFlow{% endblock %}
-
-{% block content %}
-<div class="space-y-6">
-    <!-- Header -->
-    <div>
-        <h1 class="text-3xl font-bold text-white">Dashboard</h1>
-        <p class="text-slate-400 mt-1">Visão geral do sistema CarFlow</p>
-    </div>
-
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Produtos -->
-        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-slate-600 transition-all">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-medium">Total de Produtos</p>
-                    <p class="text-3xl font-bold text-white mt-2">{{ total_produtos }}</p>
-                </div>
-                <div class="p-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600">
-                    <i class="fas fa-box text-white text-2xl"></i>
-                </div>
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarFlow - Sistema de Gerenciamento Automotivo</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🚗</div>
+            <div>
+                <h1>CarFlow</h1>
+                <p>Sistema de Gerenciamento Automotivo</p>
             </div>
-        </div>
+        </header>
 
-        <!-- Total Serviços -->
-        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-slate-600 transition-all">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-medium">Total de Serviços</p>
-                    <p class="text-3xl font-bold text-white mt-2">{{ total_servicos }}</p>
-                </div>
-                <div class="p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600">
-                    <i class="fas fa-wrench text-white text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <nav>
+            <a href="{% url 'home' %}">🏠 Dashboard</a>
+            <a href="{% url 'cadastro' %}">📅 Novo Agendamento</a>
+            <a href="/api/admin/">⚙️ Admin</a>
+        </nav>
 
-        <!-- Total Agendamentos -->
-        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-slate-600 transition-all">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-medium">Total Agendamentos</p>
-                    <p class="text-3xl font-bold text-white mt-2">{{ total_agendamentos }}</p>
-                </div>
-                <div class="p-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600">
-                    <i class="fas fa-calendar text-white text-2xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pendentes -->
-        <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 hover:border-slate-600 transition-all">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-slate-400 text-sm font-medium">Pendentes</p>
-                    <p class="text-3xl font-bold text-white mt-2">{{ agendamentos_pendentes }}</p>
-                </div>
-                <div class="p-3 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600">
-                    <i class="fas fa-clock text-white text-2xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Agendamentos -->
-    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6">
-        <h2 class="text-xl font-bold text-white mb-4">Agendamentos Recentes</h2>
-        
-        {% if agendamentos_recentes %}
-            <div class="space-y-3">
-                {% for agendamento in agendamentos_recentes %}
-                <div class="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-all">
-                    <div class="flex-1">
-                        <p class="text-white font-medium">{{ agendamento.cliente_nome }}</p>
-                        <p class="text-slate-400 text-sm">{{ agendamento.cliente_telefone }}</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-right">
-                            <p class="text-white text-sm font-medium">{{ agendamento.data }}</p>
-                            <p class="text-slate-400 text-sm">{{ agendamento.hora }}</p>
-                        </div>
-                        <span class="px-3 py-1 rounded-full text-xs font-medium border
-                            {% if agendamento.status == 'pendente' %}bg-yellow-500/20 text-yellow-300 border-yellow-500/30
-                            {% elif agendamento.status == 'confirmado' %}bg-blue-500/20 text-blue-300 border-blue-500/30
-                            {% elif agendamento.status == 'concluido' %}bg-green-500/20 text-green-300 border-green-500/30
-                            {% else %}bg-red-500/20 text-red-300 border-red-500/30{% endif %}">
-                            {{ agendamento.get_status_display }}
-                        </span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-slate-400 text-center py-8">Nenhum agendamento encontrado</p>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
         {% endif %}
-    </div>
 
-    <!-- Quick Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a href="/api/app/cadastro/" class="block p-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all">
-            <i class="fas fa-plus text-white text-3xl mb-2"></i>
-            <h3 class="text-white font-bold text-lg">Novo Agendamento</h3>
-            <p class="text-orange-100 text-sm mt-1">Criar novo agendamento de serviço</p>
-        </a>
-        <a href="/api/admin/" class="block p-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all">
-            <i class="fas fa-cog text-white text-3xl mb-2"></i>
-            <h3 class="text-white font-bold text-lg">Admin Django</h3>
-            <p class="text-blue-100 text-sm mt-1">Acessar painel administrativo</p>
-        </a>
-        <a href="/api/" class="block p-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all">
-            <i class="fas fa-code text-white text-3xl mb-2"></i>
-            <h3 class="text-white font-bold text-lg">API REST</h3>
-            <p class="text-purple-100 text-sm mt-1">Explorar endpoints da API</p>
-        </a>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Produtos</div>
+                <div class="number">{{ total_produtos }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Serviços</div>
+                <div class="number">{{ total_servicos }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Agendamentos</div>
+                <div class="number">{{ total_agendamentos }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Pendentes</div>
+                <div class="number">{{ agendamentos_pendentes }}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Agendamentos Recentes</h2>
+            {% if agendamentos_recentes %}
+                {% for agendamento in agendamentos_recentes %}
+                    <div class="agendamento-item">
+                        <div>
+                            <strong>{{ agendamento.cliente_nome }}</strong>
+                            <p>{{ agendamento.cliente_telefone }} • {{ agendamento.servico.nome }}</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p>{{ agendamento.data }} às {{ agendamento.hora }}</p>
+                            <span class="status {{ agendamento.status }}">{{ agendamento.get_status_display }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Nenhum agendamento cadastrado ainda.</p>
+            {% endif %}
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{% url 'cadastro' %}" class="btn">+ Novo Agendamento</a>
+        </div>
+
+        <footer>
+            &copy; 2026 CarFlow - Desenvolvido com Django e Python 🐍
+        </footer>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>
