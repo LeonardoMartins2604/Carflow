@@ -21,9 +21,16 @@ def home(request):
     return render(request, 'index.html', context)
 
 
+def servicos(request):
+    """Lista de serviços disponíveis"""
+    servicos_list = Servico.objects.all().order_by('nome')
+    return render(request, 'servicos.html', {'servicos': servicos_list})
+
+
 def cadastro(request):
     """Página de cadastro de agendamento"""
-    servicos = Servico.objects.all()
+    servicos_list = Servico.objects.all()
+    servico_preselecionado = request.GET.get('servico', '')
 
     if request.method == 'POST':
         try:
@@ -41,4 +48,7 @@ def cadastro(request):
         except Exception as e:
             messages.error(request, f'Erro ao criar agendamento: {str(e)}')
 
-    return render(request, 'cadastro.html', {'servicos': servicos})
+    return render(request, 'cadastro.html', {
+        'servicos': servicos_list,
+        'servico_preselecionado': servico_preselecionado,
+    })

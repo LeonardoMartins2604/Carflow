@@ -19,6 +19,7 @@
 
         <nav>
             <a href="{% url 'home' %}">🏠 Dashboard</a>
+            <a href="{% url 'servicos' %}">🔧 Serviços</a>
             <a href="{% url 'cadastro' %}">📅 Novo Agendamento</a>
             <a href="/api/admin/">⚙️ Admin</a>
         </nav>
@@ -51,7 +52,7 @@
                     <select id="servico" name="servico" required>
                         <option value="">Selecione um serviço...</option>
                         {% for servico in servicos %}
-                            <option value="{{ servico.id }}">{{ servico.nome }} - R$ {{ servico.preco }} ({{ servico.duracao }} min)</option>
+                            <option value="{{ servico.id }}" {% if servico.id|stringformat:"s" == servico_preselecionado %}selected{% endif %}>{{ servico.nome }} - R$ {{ servico.preco }} ({{ servico.duracao }} min)</option>
                         {% endfor %}
                     </select>
                 </div>

@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços - CarFlow</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <style>
+        .servicos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .servico-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .servico-card:hover {
+            transform: translateY(-4px);
+            border-color: #f97316;
+        }
+        .servico-icon {
+            background: linear-gradient(135deg, #a855f7, #7e22ce);
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .servico-nome {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .servico-descricao {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .servico-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+        }
+        .servico-preco {
+            color: #f97316;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .servico-duracao {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🚗</div>
+            <div>
+                <h1>CarFlow</h1>
+                <p>Sistema de Gerenciamento Automotivo</p>
+            </div>
+        </header>
+
+        <nav>
+            <a href="{% url 'home' %}">🏠 Dashboard</a>
+            <a href="{% url 'servicos' %}">🔧 Serviços</a>
+            <a href="{% url 'cadastro' %}">📅 Novo Agendamento</a>
+            <a href="/api/admin/">⚙️ Admin</a>
+        </nav>
+
+        <div class="card">
+            <h2>🔧 Nossos Serviços</h2>
+            <p style="margin-bottom: 10px;">Conheça os serviços que oferecemos. Escolha o ideal para você e agende já!</p>
+
+            {% if servicos %}
+                <div class="servicos-grid">
+                    {% for servico in servicos %}
+                        <div class="servico-card">
+                            <div class="servico-icon">🔧</div>
+                            <div class="servico-nome">{{ servico.nome }}</div>
+                            <div class="servico-descricao">{{ servico.descricao }}</div>
+                            <div class="servico-info">
+                                <div class="servico-preco">R$ {{ servico.preco }}</div>
+                                <div class="servico-duracao">⏱ {{ servico.duracao }} min</div>
+                            </div>
+                            <div style="margin-top: 16px; text-align: center;">
+                                <a href="{% url 'cadastro' %}?servico={{ servico.id }}" class="btn" style="width: 100%; text-align: center;">Agendar Agora</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="text-align: center; padding: 40px;">Nenhum serviço cadastrado ainda.</p>
+            {% endif %}
+        </div>
+
+        <footer>
+            &copy; 2026 CarFlow - Desenvolvido com Django e Python 🐍
+        </footer>
+    </div>
+</body>
+</html>
