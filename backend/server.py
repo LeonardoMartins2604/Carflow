@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,9 +6,10 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, date, time, timezone
+from decimal import Decimal
 
 
 ROOT_DIR = Path(__file__).parent
@@ -26,45 +27,305 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
+# ========== MODELS ==========
+
+# Produto Models
+class ProdutoBase(BaseModel):
+    nome: str
+    descricao: str
+    preco: float
+    estoque: int
+
+class ProdutoCreate(ProdutoBase):
+    pass
+
+class Produto(ProdutoBase):
+    model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class ProdutoUpdate(BaseModel):
+    nome: Optional[str] = None
+    descricao: Optional[str] = None
+    preco: Optional[float] = None
+    estoque: Optional[int] = None
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+# Servico Models
+class ServicoBase(BaseModel):
+    nome: str
+    descricao: str
+    preco: float
+    duracao: int  # em minutos
+
+class ServicoCreate(ServicoBase):
+    pass
+
+class Servico(ServicoBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+class ServicoUpdate(BaseModel):
+    nome: Optional[str] = None
+    descricao: Optional[str] = None
+    preco: Optional[float] = None
+    duracao: Optional[int] = None
+
+
+# Agendamento Models
+class AgendamentoBase(BaseModel):
+    cliente_nome: str
+    cliente_telefone: str
+    servico_id: str
+    data: str  # formato YYYY-MM-DD
+    hora: str  # formato HH:MM
+    observacoes: Optional[str] = ""
+
+class AgendamentoCreate(AgendamentoBase):
+    pass
+
+class Agendamento(AgendamentoBase):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    status: str = "pendente"  # pendente, confirmado, concluido, cancelado
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AgendamentoUpdate(BaseModel):
+    cliente_nome: Optional[str] = None
+    cliente_telefone: Optional[str] = None
+    servico_id: Optional[str] = None
+    data: Optional[str] = None
+    hora: Optional[str] = None
+    status: Optional[str] = None
+    observacoes: Optional[str] = None
+
+
+# Dashboard Stats Model
+class DashboardStats(BaseModel):
+    total_produtos: int
+    total_servicos: int
+    total_agendamentos: int
+    agendamentos_pendentes: int
+    agendamentos_hoje: int
+
+
+# ========== PRODUTOS ENDPOINTS ==========
+
+@api_router.get("/produtos", response_model=List[Produto])
+async def get_produtos():
+    """Listar todos os produtos"""
+    produtos = await db.produtos.find({}, {"_id": 0}).to_list(1000)
+    return produtos
+
+@api_router.post("/produtos", response_model=Produto)
+async def create_produto(produto: ProdutoCreate):
+    """Criar novo produto"""
+    produto_obj = Produto(**produto.model_dump())
+    doc = produto_obj.model_dump()
+    await db.produtos.insert_one(doc)
+    return produto_obj
+
+@api_router.get("/produtos/{produto_id}", response_model=Produto)
+async def get_produto(produto_id: str):
+    """Obter produto por ID"""
+    produto = await db.produtos.find_one({"id": produto_id}, {"_id": 0})
+    if not produto:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return produto
+
+@api_router.put("/produtos/{produto_id}", response_model=Produto)
+async def update_produto(produto_id: str, produto_update: ProdutoUpdate):
+    """Atualizar produto"""
+    update_data = {k: v for k, v in produto_update.model_dump().items() if v is not None}
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nenhum campo para atualizar")
     
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    result = await db.produtos.update_one(
+        {"id": produto_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    
+    produto = await db.produtos.find_one({"id": produto_id}, {"_id": 0})
+    return produto
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+@api_router.delete("/produtos/{produto_id}")
+async def delete_produto(produto_id: str):
+    """Deletar produto"""
+    result = await db.produtos.delete_one({"id": produto_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    
+    return {"message": "Produto deletado com sucesso"}
+
+
+# ========== SERVICOS ENDPOINTS ==========
+
+@api_router.get("/servicos", response_model=List[Servico])
+async def get_servicos():
+    """Listar todos os serviços"""
+    servicos = await db.servicos.find({}, {"_id": 0}).to_list(1000)
+    return servicos
+
+@api_router.post("/servicos", response_model=Servico)
+async def create_servico(servico: ServicoCreate):
+    """Criar novo serviço"""
+    servico_obj = Servico(**servico.model_dump())
+    doc = servico_obj.model_dump()
+    await db.servicos.insert_one(doc)
+    return servico_obj
+
+@api_router.get("/servicos/{servico_id}", response_model=Servico)
+async def get_servico(servico_id: str):
+    """Obter serviço por ID"""
+    servico = await db.servicos.find_one({"id": servico_id}, {"_id": 0})
+    if not servico:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    return servico
+
+@api_router.put("/servicos/{servico_id}", response_model=Servico)
+async def update_servico(servico_id: str, servico_update: ServicoUpdate):
+    """Atualizar serviço"""
+    update_data = {k: v for k, v in servico_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nenhum campo para atualizar")
+    
+    result = await db.servicos.update_one(
+        {"id": servico_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    
+    servico = await db.servicos.find_one({"id": servico_id}, {"_id": 0})
+    return servico
+
+@api_router.delete("/servicos/{servico_id}")
+async def delete_servico(servico_id: str):
+    """Deletar serviço"""
+    result = await db.servicos.delete_one({"id": servico_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    
+    return {"message": "Serviço deletado com sucesso"}
+
+
+# ========== AGENDAMENTOS ENDPOINTS ==========
+
+@api_router.get("/agendamentos", response_model=List[Agendamento])
+async def get_agendamentos():
+    """Listar todos os agendamentos"""
+    agendamentos = await db.agendamentos.find({}, {"_id": 0}).to_list(1000)
     
     # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
+    for agendamento in agendamentos:
+        if isinstance(agendamento.get('created_at'), str):
+            agendamento['created_at'] = datetime.fromisoformat(agendamento['created_at'])
     
-    return status_checks
+    return agendamentos
+
+@api_router.post("/agendamentos", response_model=Agendamento)
+async def create_agendamento(agendamento: AgendamentoCreate):
+    """Criar novo agendamento"""
+    # Verificar se o serviço existe
+    servico = await db.servicos.find_one({"id": agendamento.servico_id})
+    if not servico:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    
+    agendamento_obj = Agendamento(**agendamento.model_dump())
+    doc = agendamento_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.agendamentos.insert_one(doc)
+    return agendamento_obj
+
+@api_router.get("/agendamentos/{agendamento_id}", response_model=Agendamento)
+async def get_agendamento(agendamento_id: str):
+    """Obter agendamento por ID"""
+    agendamento = await db.agendamentos.find_one({"id": agendamento_id}, {"_id": 0})
+    if not agendamento:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
+    
+    if isinstance(agendamento.get('created_at'), str):
+        agendamento['created_at'] = datetime.fromisoformat(agendamento['created_at'])
+    
+    return agendamento
+
+@api_router.put("/agendamentos/{agendamento_id}", response_model=Agendamento)
+async def update_agendamento(agendamento_id: str, agendamento_update: AgendamentoUpdate):
+    """Atualizar agendamento"""
+    update_data = {k: v for k, v in agendamento_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nenhum campo para atualizar")
+    
+    # Se está atualizando servico_id, verificar se existe
+    if "servico_id" in update_data:
+        servico = await db.servicos.find_one({"id": update_data["servico_id"]})
+        if not servico:
+            raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    
+    result = await db.agendamentos.update_one(
+        {"id": agendamento_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
+    
+    agendamento = await db.agendamentos.find_one({"id": agendamento_id}, {"_id": 0})
+    
+    if isinstance(agendamento.get('created_at'), str):
+        agendamento['created_at'] = datetime.fromisoformat(agendamento['created_at'])
+    
+    return agendamento
+
+@api_router.delete("/agendamentos/{agendamento_id}")
+async def delete_agendamento(agendamento_id: str):
+    """Deletar agendamento"""
+    result = await db.agendamentos.delete_one({"id": agendamento_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado")
+    
+    return {"message": "Agendamento deletado com sucesso"}
+
+
+# ========== DASHBOARD ENDPOINT ==========
+
+@api_router.get("/dashboard/stats", response_model=DashboardStats)
+async def get_dashboard_stats():
+    """Obter estatísticas do dashboard"""
+    total_produtos = await db.produtos.count_documents({})
+    total_servicos = await db.servicos.count_documents({})
+    total_agendamentos = await db.agendamentos.count_documents({})
+    agendamentos_pendentes = await db.agendamentos.count_documents({"status": "pendente"})
+    
+    # Agendamentos de hoje
+    hoje = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    agendamentos_hoje = await db.agendamentos.count_documents({"data": hoje})
+    
+    return DashboardStats(
+        total_produtos=total_produtos,
+        total_servicos=total_servicos,
+        total_agendamentos=total_agendamentos,
+        agendamentos_pendentes=agendamentos_pendentes,
+        agendamentos_hoje=agendamentos_hoje
+    )
+
+
+# ========== ROOT ENDPOINT ==========
+
+@api_router.get("/")
+async def root():
+    return {"message": "CarFlow API - Sistema de Gerenciamento Automotivo"}
+
 
 # Include the router in the main app
 app.include_router(api_router)
