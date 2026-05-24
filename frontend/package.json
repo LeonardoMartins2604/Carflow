@@ -56,9 +56,9 @@
     "zod": "^3.24.4"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test"
+    "start": "python3 server.py",
+    "build": "echo 'No build needed - pure Python frontend'",
+    "test": "echo 'No tests - pure Python frontend'"
   },
   "browserslist": {
     "production": [
