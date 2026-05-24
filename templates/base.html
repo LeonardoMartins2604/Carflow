@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CarFlow - Sistema de Gerenciamento Automotivo{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Header -->
+    <header class="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-2 rounded-lg">
+                        <i class="fas fa-car text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">CarFlow</h1>
+                        <p class="text-sm text-slate-400">Sistema de Gerenciamento Automotivo</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex gap-4">
+                    <a href="/api/app/" class="px-4 py-2 rounded-lg hover:bg-slate-700/50 transition">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </a>
+                    <a href="/api/app/produtos/" class="px-4 py-2 rounded-lg hover:bg-slate-700/50 transition">
+                        <i class="fas fa-box mr-2"></i>Produtos
+                    </a>
+                    <a href="/api/app/servicos/" class="px-4 py-2 rounded-lg hover:bg-slate-700/50 transition">
+                        <i class="fas fa-wrench mr-2"></i>Serviços
+                    </a>
+                    <a href="/api/app/agendamentos/" class="px-4 py-2 rounded-lg hover:bg-slate-700/50 transition">
+                        <i class="fas fa-calendar mr-2"></i>Agendamentos
+                    </a>
+                    <a href="/api/app/cadastro/" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg hover:from-orange-600 hover:to-orange-700 transition">
+                        <i class="fas fa-plus mr-2"></i>Novo Agendamento
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mx-auto px-4 pt-4">
+        {% for message in messages %}
+        <div class="bg-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-500/20 border border-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}blue{% endif %}-500/30 text-white px-4 py-3 rounded mb-4">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 text-center text-slate-400 text-sm">
+        <p>&copy; 2026 CarFlow - Sistema de Gerenciamento Automotivo</p>
+        <p class="mt-2">Desenvolvido com Django e Python 🐍</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Produtos - CarFlow{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Produtos</h1>
+            <p class="text-slate-400 mt-1">Gerencie o estoque de produtos</p>
+        </div>
+        <a href="/api/admin/core/produto/add/" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            Novo Produto
+        </a>
+    </div>
+
+    <!-- Produtos Table -->
+    <div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden">
+        {% if produtos %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-700/50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Nome</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Descrição</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Preço</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Estoque</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-slate-300 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for produto in produtos %}
+                    <tr class="hover:bg-slate-700/30 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-white">{{ produto.nome }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-slate-300">{{ produto.descricao }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">R$ {{ produto.preco }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if produto.estoque > 10 %}bg-green-500/20 text-green-300
+                                {% elif produto.estoque > 0 %}bg-yellow-500/20 text-yellow-300
+                                {% else %}bg-red-500/20 text-red-300{% endif %}">
+                                {{ produto.estoque }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="/api/admin/core/produto/{{ produto.id }}/change/" class="text-blue-400 hover:text-blue-300 px-3 py-1 rounded hover:bg-blue-500/10 transition">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="/api/admin/core/produto/{{ produto.id }}/delete/" class="text-red-400 hover:text-red-300 px-3 py-1 rounded hover:bg-red-500/10 transition ml-2">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-box text-6xl text-slate-600 mb-4"></i>
+            <p class="text-slate-400 mb-4">Nenhum produto cadastrado</p>
+            <a href="/api/admin/core/produto/add/" class="inline-block px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition">
+                <i class="fas fa-plus mr-2"></i>Adicionar Primeiro Produto
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

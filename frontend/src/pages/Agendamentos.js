@@ -83,7 +83,7 @@ const Agendamentos = () => {
     setFormData({
       cliente_nome: agendamento.cliente_nome,
       cliente_telefone: agendamento.cliente_telefone,
-      servico_id: agendamento.servico_id,
+      servico_id: agendamento.servico,
       data: agendamento.data,
       hora: agendamento.hora,
       observacoes: agendamento.observacoes || "",
@@ -351,7 +351,7 @@ const Agendamentos = () => {
               <div className="space-y-3 mb-4">
                 <div className="flex items-center gap-3 text-slate-300">
                   <Wrench className="w-4 h-4 text-slate-500" />
-                  <span>{getServicoNome(agendamento.servico_id)}</span>
+                  <span>{getServicoNome(agendamento.servico)}</span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-300">
                   <CalendarIcon className="w-4 h-4 text-slate-500" />
